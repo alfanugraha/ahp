@@ -1,6 +1,6 @@
 Package: ahp
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: A simulation of Analytical Hierarchy Process
+Version: 0.1.0
 Authors@R: 
     person("Alfa", "Nugraha", , "alfanugraha@apps.ipb.ac.id", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
@@ -13,11 +13,11 @@ URL: https://github.com/alfanugraha/ahp
 BugReports: https://github.com/alfanugraha/ahp/issues
 Imports:
     gtools,
-    shiny,
-    bslib,
-    htmltools,
-    DT
+    shiny
 Suggests: 
     ggplot2,
+    bslib,
+    htmltools,
+    DT,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

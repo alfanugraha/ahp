@@ -4,7 +4,7 @@
 #' @param ... Arguments of combinations function
 #'
 #' @return generate_combinations returns an array of matrix object
-#' @import gtools
+#' @importFrom gtools combinations
 #' @export
 #'
 #' @examples

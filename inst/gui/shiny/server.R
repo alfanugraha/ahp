@@ -1,42 +1,49 @@
 function(input, output, session) {
   rv <- reactiveValues(
-    list_criteria = "Kriteria 1, Kriteria 2, Kriteria 3",
     criterias = NULL,
     num_criteria = 3,
-    matrix_criteria = NULL,
-    comb_sets = NULL
+    comb_sets = NULL,
+    mtx_criteria = list(),
+
+    alternatives = NULL,
+    num_alternatives = 3,
+    comb_sets_alt = NULL,
+    mtx_alternative = list(),
   )
 
-  output$dynamicTbl <- renderDT({
-    rv$list_criteria <- input$criteria
-    rv$criterias <- strsplit(rv$list_criteria, ", ")[[1]]
-    criterias <- rv$criterias
-    rv$num_criteria <- length(criterias)
 
-    df <- data.frame(matrix(0, nrow = rv$num_criteria, ncol = rv$num_criteria))
-    colnames(df) <- criterias
-    rownames(df) <- criterias
+  ## SETUP CRITERIA USER INTERFACE ####
+  output$sliderCriterias <- renderUI({
+    if(!is.null(input$criteria) && input$criteria !=""){
+      rv$criterias <- trimws(unlist(strsplit(input$criteria, ",")))
+      rv$num_criteria <- length(rv$criterias)
+    }
 
-    diag(df) <- 1
-    rv$matrix_critera <- df
-    df
-  }, options = list(dom = 't', ordering=F), selection = 'none')
+    if(rv$num_criteria > 2){
+      num_options <- ((rv$num_criteria-1) ^ 2 + (rv$num_criteria-1)) / 2
+      counter <- num_options
+      sets <- combinations(rv$num_criteria, 2, repeats.allowed = F, v=1:rv$num_criteria)
+      rv$comb_sets <- sets
+    } else if(rv$num_criteria == 2) {
+      counter <- rv$num_criteria - 1
+      sets <- combinations(rv$num_criteria, 2, repeats.allowed = F, v=1:rv$num_criteria)
+      rv$comb_sets <- sets
+    } else {
+      rv$comb_sets <- NULL
+    }
 
-  output$sliders <- renderUI({
-    criterias <- strsplit(rv$list_criteria, ", ")[[1]]
-    num_options <- ((rv$num_criteria-1) ^ 2 + (rv$num_criteria-1)) / 2
-    sets <- combinations(num_options, 2, repeats.allowed = F, v=1:num_options)
-    print(sets)
-    rv$comb_sets <- sets
+    validate(
+      need(!is.null(rv$criterias) && rv$num_criteria >= 2, "Minimal dua kriteria diperlukan")
+    )
 
     # Generate radio buttons based on num_options
-    slider_inputs <- lapply(1:num_options, function(i) {
+    slider_inputs <- lapply(1:counter, function(i) {
       sliderInput(
-        inputId = paste0("nilai_kriteria", i),
-        label = paste0(criterias[sets[i, 1]], " vs ", criterias[sets[i, 2]]),
+        inputId = paste0("nilai_kriteria_", i),
+        label = paste0(rv$criterias[sets[i, 1]], " vs ", rv$criterias[sets[i, 2]]),
         min = -9,
         max = 9,
-        value = 1,
+        value = 0,
         step = 1,
         width = '100%',
         ticks = T
@@ -47,16 +54,120 @@ function(input, output, session) {
     do.call(tagList, slider_inputs)
   })
 
-  # Reactive expression to get the selected values
-  selected_values <- reactive({
-    sapply(1:rv$num_criteria, function(i) {
-      input[[paste0("nilai_kriteria", i)]]
-    })
+  df_criteria <- reactive({
+    df <- data.frame(matrix(0, nrow = rv$num_criteria, ncol = rv$num_criteria))
+    colnames(df) <- rv$criterias
+    rownames(df) <- rv$criterias
+
+    sets <- rv$comb_sets
+    diag(df) <- 1
+
+    for(i in 1:rv$num_criteria){
+      nilai <- input[[paste0("nilai_kriteria_", i)]]
+
+      if(nilai != 0 && !is.null(nilai) && is.numeric(nilai)) {
+        if(nilai < 0 ){
+          df[sets[i, 1], sets[i, 2]] <- abs(nilai)
+          df[sets[i, 2], sets[i, 1]] <- 1 / abs(nilai)
+        } else {
+          df[sets[i, 1], sets[i, 2]] <- nilai
+          df[sets[i, 2], sets[i, 1]] <- 1 / nilai
+        }
+      }
+    }
+
+    df
   })
 
-  # Display the selected values
-  output$selected_values <- renderText({
-    paste("Selected values:", paste(selected_values(), collapse = ", "))
+  output$dynamicTableCriteria <- renderDT({
+    rv$mtx_criteria <- df_criteria()
+    rv$mtx_criteria
+  }, options = list(dom = 't', ordering=F), selection = 'none')
+
+
+  ## SETUP ALTERNATIVES USER INTERFACE ####
+  output$dynamicTablesAndSliders <- renderUI({
+    if(!is.null(input$alternatives) && input$alternatives !=""){
+      rv$alternatives <- trimws(unlist(strsplit(input$alternatives, ",")))
+      rv$num_alternatives <- length(rv$alternatives)
+    }
+
+    if(rv$num_alternatives > 2){
+      num_options <- ((rv$num_alternatives-1) ^ 2 + (rv$num_alternatives-1)) / 2
+      counter <- num_options
+      sets <- combinations(rv$num_alternatives, 2, repeats.allowed = F, v=1:rv$num_alternatives)
+      rv$comb_sets_alt <- sets
+    } else if(rv$num_alternatives == 2) {
+      counter <- rv$num_alternatives - 1
+      sets <- combinations(rv$num_alternatives, 2, repeats.allowed = F, v=1:rv$num_alternatives)
+      rv$comb_sets_alt <- sets
+    } else {
+      rv$comb_sets_alt <- NULL
+    }
+
+    validate(
+      need(!is.null(rv$alternatives) && rv$num_alternatives >= 2, "Minimal dua alternatif diperlukan")
+    )
+
+    tables_and_sliders <- lapply(1:rv$num_criteria, function(i){
+      tagList(
+        h5(paste0("Kriteria ", i, ": ", rv$criterias[i])),
+        DTOutput(paste0("tbl_alt_", i)),
+        lapply(1:counter, function(j){
+          sliderInput(
+            inputId = paste0("slider_alt_", i, "_", j),
+            label = paste0(rv$alternatives[sets[j, 1]], " vs ", rv$alternatives[sets[j, 2]]),
+            min = -9,
+            max = 9,
+            value = 0,
+            step = 1,
+            width = '100%',
+            ticks = T
+          )
+        }),
+        br()
+      )
+    })
+
+    # Return the UI elements
+    do.call(tagList, tables_and_sliders)
+  })
+
+  observeEvent(input$update_sliders, {
+    df <- matrix(0, nrow = rv$num_alternatives, ncol = rv$num_alternatives)
+    colnames(df) <- rv$alternatives
+    rownames(df) <- rv$alternatives
+    diag(df) <- 1
+    sets <- rv$comb_sets_alt
+    req(sets)
+
+    lapply(1:rv$num_criteria, function(i){
+      rv$mtx_alternative[[paste0("tbl_", i)]] <- df
+      # df <- rv$mtx_alternative[[paste0("tbl_", i)]]
+
+      for (j in 1:rv$num_alternatives) {
+        slider_id <- paste0("slider_alt_", i, "_", j)
+        nilai <- input[[slider_id]]
+
+        if(nilai != 0 && !is.null(nilai) && is.numeric(nilai)) {
+          if(nilai < 0 ){
+            df[sets[j, 1], sets[j, 2]] <- abs(nilai)
+            df[sets[j, 2], sets[j, 1]] <- 1 / abs(nilai)
+          } else {
+            df[sets[j, 1], sets[j, 2]] <- nilai
+            df[sets[j, 2], sets[j, 1]] <- 1 / nilai
+          }
+        }
+      }
+
+      print(rv$alternatives[i])
+      rv$mtx_alternative[[paste0("tbl_", i)]] <- df
+      print(rv$mtx_alternative[[paste0("tbl_", i)]])
+
+      output[[paste0("tbl_alt_", i)]] <- renderDT({
+        rv$mtx_alternative[[paste0("tbl_", i)]]
+      }, options = list(dom = 't', ordering = FALSE), selection = 'none')
+    })
   })
 
 }
