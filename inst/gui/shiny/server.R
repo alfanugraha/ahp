@@ -11,6 +11,26 @@ function(input, output, session) {
     mtx_alternative = list(),
   )
 
+  ahp <- reactiveValues(
+    VE = NULL,
+    VP = NULL,
+    VA = NULL,
+    VB = NULL,
+    Qmax = NULL,
+    CI = NULL,
+    CR = NULL
+  )
+
+  ahpAlt <- reactiveValues(
+    VE = NULL,
+    VP = NULL,
+    VA = NULL,
+    VB = NULL,
+    Qmax = NULL,
+    CI = NULL,
+    CR = NULL
+  )
+
 
   ## SETUP CRITERIA USER INTERFACE ####
   output$sliderCriterias <- renderUI({
@@ -54,21 +74,22 @@ function(input, output, session) {
     do.call(tagList, slider_inputs)
   })
 
-  df_criteria <- reactive({
+  observeEvent(input$update_criteria, {
     df <- data.frame(matrix(0, nrow = rv$num_criteria, ncol = rv$num_criteria))
     colnames(df) <- rv$criterias
     rownames(df) <- rv$criterias
 
     sets <- rv$comb_sets
     diag(df) <- 1
+    rv$mtx_criteria <- df
 
     for(i in 1:rv$num_criteria){
       nilai <- input[[paste0("nilai_kriteria_", i)]]
 
       if(nilai != 0 && !is.null(nilai) && is.numeric(nilai)) {
         if(nilai < 0 ){
-          df[sets[i, 1], sets[i, 2]] <- abs(nilai)
-          df[sets[i, 2], sets[i, 1]] <- 1 / abs(nilai)
+          df[sets[i, 1], sets[i, 2]] <- 1 / abs(nilai)
+          df[sets[i, 2], sets[i, 1]] <- abs(nilai)
         } else {
           df[sets[i, 1], sets[i, 2]] <- nilai
           df[sets[i, 2], sets[i, 1]] <- 1 / nilai
@@ -76,14 +97,11 @@ function(input, output, session) {
       }
     }
 
-    df
+    rv$mtx_criteria <- df
+    output$dynamicTableCriteria <- renderDT({
+      rv$mtx_criteria
+    }, options = list(dom = 't', ordering=F), selection = 'none')
   })
-
-  output$dynamicTableCriteria <- renderDT({
-    rv$mtx_criteria <- df_criteria()
-    rv$mtx_criteria
-  }, options = list(dom = 't', ordering=F), selection = 'none')
-
 
   ## SETUP ALTERNATIVES USER INTERFACE ####
   output$dynamicTablesAndSliders <- renderUI({
@@ -133,7 +151,7 @@ function(input, output, session) {
     do.call(tagList, tables_and_sliders)
   })
 
-  observeEvent(input$update_sliders, {
+  observeEvent(input$update_alternative, {
     df <- matrix(0, nrow = rv$num_alternatives, ncol = rv$num_alternatives)
     colnames(df) <- rv$alternatives
     rownames(df) <- rv$alternatives
@@ -143,7 +161,6 @@ function(input, output, session) {
 
     lapply(1:rv$num_criteria, function(i){
       rv$mtx_alternative[[paste0("tbl_", i)]] <- df
-      # df <- rv$mtx_alternative[[paste0("tbl_", i)]]
 
       for (j in 1:rv$num_alternatives) {
         slider_id <- paste0("slider_alt_", i, "_", j)
@@ -151,8 +168,8 @@ function(input, output, session) {
 
         if(nilai != 0 && !is.null(nilai) && is.numeric(nilai)) {
           if(nilai < 0 ){
-            df[sets[j, 1], sets[j, 2]] <- abs(nilai)
-            df[sets[j, 2], sets[j, 1]] <- 1 / abs(nilai)
+            df[sets[j, 1], sets[j, 2]] <- 1 / abs(nilai)
+            df[sets[j, 2], sets[j, 1]] <- abs(nilai)
           } else {
             df[sets[j, 1], sets[j, 2]] <- nilai
             df[sets[j, 2], sets[j, 1]] <- 1 / nilai
@@ -160,14 +177,87 @@ function(input, output, session) {
         }
       }
 
-      print(rv$alternatives[i])
+      # print(rv$alternatives[i])
       rv$mtx_alternative[[paste0("tbl_", i)]] <- df
-      print(rv$mtx_alternative[[paste0("tbl_", i)]])
+      # print(rv$mtx_alternative[[paste0("tbl_", i)]])
 
       output[[paste0("tbl_alt_", i)]] <- renderDT({
         rv$mtx_alternative[[paste0("tbl_", i)]]
       }, options = list(dom = 't', ordering = FALSE), selection = 'none')
     })
+  })
+
+  criteria_res <- reactive({
+    req(rv$mtx_criteria)
+    df <- rv$mtx_criteria
+    num_criteria <- rv$num_criteria
+
+    ahp$VE <- apply(df, 1, calculateVE, n=num_criteria)
+    ahp$VP <- calculateVP(ahp$VE)
+    ahp$VA <- as.matrix(df) %*% ahp$VP
+    ahp$VB <- ahp$VA / ahp$VP
+    ahp$Qmax <- sum(ahp$VB) / num_criteria
+    ahp$CI <- (ahp$Qmax / num_criteria) / (num_criteria - 1)
+    ahp$CR <- ahp$CI / RI(num_criteria)
+
+    r <- round(ahp$VP*100, 2)
+    res <- data.frame(Bobot=r)
+    res
+  })
+
+  output$bobotKriteria <- renderDT({
+    df <- criteria_res()
+    df
+  }, options = list(dom = 't', ordering = FALSE), selection = 'none')
+
+
+  output$boxCriteria <- renderUI({
+    tagList(
+      p(
+        "CI: ", round(ahp$CI, 4)
+      ),
+      p(
+        "CR: ", round(ahp$CR, 4)
+      )
+    )
+  })
+
+  alternative_res <- reactive({
+    req(rv$mtx_alternative)
+    df <- rv$mtx_alternative
+    num_alts <- rv$num_alternatives
+
+    for(i in 1:rv$num_criteria){
+      df_ <- df[[paste0("tbl_", i)]]
+      ahpAlt$VE[[i]] <- apply(df_, 1, calculateVE, n=num_alts)
+      ahpAlt$VP[[i]] <- calculateVP(ahpAlt$VE[[i]])
+      ahpAlt$VA[[i]] <- as.matrix(df_) %*% ahpAlt$VP[[i]]
+      ahpAlt$VB[[i]] <- ahpAlt$VA[[i]] / ahpAlt$VP[[i]]
+      ahpAlt$Qmax[[i]] <- sum(ahpAlt$VB[[i]]) / num_alts
+      ahpAlt$CI[[i]] <- (ahpAlt$Qmax[[i]] / num_alts) / (num_alts - 1)
+      ahpAlt$CR[[i]] <- ahpAlt$CI[[i]] / RI(num_alts)
+    }
+
+    goals <- data.frame(matrix(unlist(ahpAlt$VP), nrow=length(ahpAlt$VP), byrow=TRUE))
+    r <- round(t(goals) %*% ahp$VP*100, 2)
+    fin <- data.frame(Bobot=r)
+    rownames(fin) <- rv$alternatives
+
+    fin
+  })
+
+  output$bobotAlternative <- renderDT({
+    df <- alternative_res()
+    df
+  }, options = list(dom = 't', ordering = FALSE), selection = 'none')
+
+  output$boxAlternative <- renderUI({
+    lapply(1:rv$num_criteria, function(i){
+      tagList(
+        p("Rasio Kekonsistenan terhadap ", rv$criterias[i], ": ", round(ahpAlt$CR[[i]], 4))
+      )
+    })
+
   })
 
 }

@@ -12,14 +12,14 @@ page_navbar(
       ")
     )
   ),
-
   title = "Simulasi AHP",
   nav_panel(
     title = "Kriteria",
     layout_sidebar(
       sidebar = sidebar(
         width = 300,
-        textAreaInput(inputId = "criteria", label = "Kriteria", height = "100px", value = "Kriteria 1, Kriteria 2, Kriteria 3")
+        textAreaInput(inputId = "criteria", label = "Kriteria", height = "100px", value = "Kriteria 1, Kriteria 2, Kriteria 3"),
+        actionButton("update_criteria", "Update kriteria")
       ),
       layout_columns(
         card(
@@ -52,7 +52,7 @@ page_navbar(
       sidebar = sidebar(
         width = 300,
         textAreaInput(inputId = "alternatives", label = "Alternatif", height = "100px", value = "Alternatif 1, Alternatif 2, Alternatif 3"),
-        actionButton("update_sliders", "Update tabel")
+        actionButton("update_alternative", "Update alternatif")
       ),
       layout_columns(
         card(
@@ -71,7 +71,47 @@ page_navbar(
     )
   ),
   nav_panel(
-    title = "Analisis"
+    title = "Analisis",
+    withMathJax(),
+    layout_columns(
+      card(
+        card_header("Penjelasan singkat"),
+        includeMarkdown("ahp_formula.Rmd")
+      ),
+      layout_columns(
+        value_box(
+          title = "Ringkasan Hasil AHP pada Kriteria",
+          value = htmlOutput("boxCriteria"),
+          showcase = icon("key"),
+          htmlOutput("boxCriteria"),
+          theme = "primary"
+        ),
+        card(
+          card_header("Bobot kriteria"),
+          card_body(
+            DTOutput("bobotKriteria")
+          )
+        ),
+        col_widths = c(12, 12)
+      ),
+      layout_columns(
+
+        value_box(
+          title = "Ringkasan Hasil AHP pada Alternatif",
+          value = htmlOutput("boxAlternative"),
+          showcase = icon("lock-open"),
+          htmlOutput("boxAlternative"),
+          theme = "success"
+        ),
+        card(
+          card_header("Rekomendasi alternatif & bobotnya"),
+          card_body(
+            DTOutput("bobotAlternative")
+          )
+        ),
+        col_widths = c(12, 12)
+      )
+    )
   ),
   nav_panel(
     title = "Tentang"

@@ -1,0 +1,31 @@
+## Indeks Konsistensi
+
+Metode AHP dilengkapi dengan perhitungan Indeks Konsistensi (*Consistency Index*) atau CI untuk mengetahui tingkat konsistensi isian pengguna. CI yang diperoleh kemudian dibandingan dengan Indeks Konsistensi Random (*Random Consistency Index*) atau RI untuk setiap `n` objek. Tabel berikut adalah rujukan nilai RI untuk setiap `n` objek $2 \le  n  \le  10$. 
+
+| $n$   | $1$   | $2$   | $3$   | $4$   | $5$   | $6$   | $7$   | $8$   | $9$   | $10$  |
+|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
+| $RI$  | `0.00`| `0.00`| `0.58`| `0.90`| `1.12`| `1.24`| `1.32`| `1.41`| `1.45`| `1.49`|
+
+CR (*Consistency Ratio*) adalah hasil perbandingan antara CI dengan RI. Jika $CR \le 0.10$ (10%), maka jawaban pengguna konsisten sehingga solusi yang dihasilkan optimal.
+
+Langkah pengecekan konsistensi hasil metode AHP sebagai berikut:
+
+1. Hitung perkalian antara matriks awal dengan matriks nilai eigen yang terakhir:
+
+   $Aw^T$; dimana $A$ adalah matriks awal dan $w^T$ adalah matriks nilai eigen
+
+2. Hitung
+
+   $$
+   \frac{1}{n} \sum_{i=n}^{i=1} \frac{i-th \ entry \ in \ Aw^T}{i-th \ entry \ in \ w^T}
+   $$
+   
+3. Hitung CI
+
+   $CI = \frac{hasil \; langkah \; kedua - n}{n-1}$
+   
+4. Hitung CR
+
+   $CR = \frac{CI}{CR}$
+   
+Jika $CR \le 0.10$ (10%) maka derajat kekonsistenan memuaskan, sebaliknya maka dapat disimpulkan bahwa terdapat ketidakkonsistenan saat menetapkan skala perbandingan pada suatu pasangan kriteria sehingga solusi AHP tersebut menjadi tidak signifikan bagi pengguna.
