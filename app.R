@@ -1,4 +1,169 @@
-function(input, output, session) {
+library(shiny)
+library(bslib)
+library(DT)
+library(htmltools)
+library(gtools)
+
+table_pembanding_df <- data.frame(
+  Sintaks = c("sangat diutamakan", "lebih diutamakan menuju sangat diutamakan", "lebih diutamakan",
+              "diutamakan menuju lebih diutamakan", "diutamakan", "cukup diutamakan menuju diutamakan",
+              "cukup diutamakan", "setara menuju cukup diutamakan", "setara"),
+  Nilai = c(9:1)
+)
+
+RI <- function(n){
+  if (n==2) return (100)
+  if (n==3) return (0.5247)
+  if (n==4) return (0.8816)
+  if (n==5) return (1.1086)
+  if (n==6) return (1.2479)
+  if (n==7) return (1.3417)
+  if (n==8) return (1.4057)
+  if (n==9) return (1.4499)
+  if (n==10) return (1.4854)
+  if (n==11) return (1.5140)
+  if (n==12) return (1.5365)
+  if (n==13) return (1.5551)
+  if (n==14) return (1.5713)
+  if (n==15) return (1.5838)
+  return ((1.7699*n-4.3513)/(n-1.0)) # formula for 16+
+}
+
+calculateVE <- function(x, n){
+  prod(x) ^ (1/n)
+}
+
+calculateVP <- function(x){
+  x / sum(x)
+}
+
+
+
+# Define UI for application that draws a histogram
+ui <- page_navbar(
+  id = "main_page",
+  theme = bs_theme(
+    version = version_default(),
+    font_scale = 0.9
+  ),
+  bg = "#0062cc",
+  header = tags$head(
+    tags$style(
+      HTML("
+        #map1{ height: 60px; }
+      ")
+    )
+  ),
+  title = "Simulasi AHP",
+  nav_panel(
+    title = "Kriteria",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 300,
+        textAreaInput(inputId = "criteria", label = "Kriteria", height = "100px", value = "Kriteria 1, Kriteria 2, Kriteria 3"),
+        actionButton("update_criteria", "Update kriteria")
+      ),
+      layout_columns(
+        card(
+          card_header(class = "bg-dark", "Tabel Standar Nilai Pembandingan"),
+          datatable(table_pembanding_df, options = list(dom = 't', ordering=F), selection = 'none', rownames = FALSE)
+        ),
+        layout_columns(
+          card(
+            card_header("Tabel Perbandingan Kriteria"),
+            max_height = 300,
+            full_screen = T,
+            card_body(
+              DTOutput("dynamicTableCriteria")
+            )
+          ),
+          card(
+            card_header("Preferensi Kriteria"),
+            full_screen = T,
+            uiOutput("sliderCriterias")
+          ),
+          col_widths = c(12, 12)
+        ),
+        col_widths = c(4, 8)
+      )
+    )
+  ),
+  nav_panel(
+    title = "Alternatif",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 300,
+        textAreaInput(inputId = "alternatives", label = "Alternatif", height = "100px", value = "Alternatif 1, Alternatif 2, Alternatif 3"),
+        actionButton("update_alternative", "Update alternatif")
+      ),
+      layout_columns(
+        card(
+          card_header(class = "bg-dark", "Tabel Standar Nilai Pembandingan"),
+          datatable(table_pembanding_df, options = list(dom = 't', ordering=F), selection = 'none', rownames = FALSE)
+        ),
+        card(
+          card_header("Tabel Perbandingan & Preferensi Alternatif"),
+          full_screen = T,
+          card_body(
+            uiOutput("dynamicTablesAndSliders")
+          )
+        ),
+        col_widths = c(4, 8)
+      )
+    )
+  ),
+  nav_panel(
+    title = "Analisis",
+    withMathJax(),
+    layout_columns(
+      card(
+        card_header("Penjelasan singkat"),
+        includeMarkdown("ahp_formula.Rmd")
+      ),
+      layout_columns(
+        value_box(
+          title = "Ringkasan Hasil AHP pada Kriteria",
+          value = htmlOutput("boxCriteria"),
+          showcase = icon("key"),
+          htmlOutput("boxCriteria"),
+          theme = "primary"
+        ),
+        card(
+          card_header("Bobot kriteria"),
+          card_body(
+            DTOutput("bobotKriteria")
+          )
+        ),
+        col_widths = c(12, 12)
+      ),
+      layout_columns(
+
+        value_box(
+          title = "Ringkasan Hasil AHP pada Alternatif",
+          value = htmlOutput("boxAlternative"),
+          showcase = icon("lock-open"),
+          htmlOutput("boxAlternative"),
+          theme = "success"
+        ),
+        card(
+          card_header("Rekomendasi alternatif & bobotnya"),
+          card_body(
+            DTOutput("bobotAlternative")
+          )
+        ),
+        col_widths = c(12, 12)
+      )
+    )
+  ),
+  nav_panel(
+    title = "Tentang"
+  )
+
+)
+
+
+# Define server logic required to draw a histogram
+server <- function(input, output, session) {
   rv <- reactiveValues(
     criterias = NULL,
     num_criteria = 3,
@@ -261,3 +426,7 @@ function(input, output, session) {
   })
 
 }
+
+
+# Run the application
+shinyApp(ui = ui, server = server)
