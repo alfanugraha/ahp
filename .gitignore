@@ -5,3 +5,7 @@
 .DS_Store
 .quarto
 *.Rproj
+ahp.xlsx
+*.pdf
+trial.Rmd
+*.html
