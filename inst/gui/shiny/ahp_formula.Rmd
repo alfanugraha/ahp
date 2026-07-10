@@ -2,9 +2,10 @@
 
 Metode AHP dilengkapi dengan perhitungan Indeks Konsistensi (*Consistency Index*) atau CI untuk mengetahui tingkat konsistensi isian pengguna. CI yang diperoleh kemudian dibandingan dengan Indeks Konsistensi Random (*Random Consistency Index*) atau RI untuk setiap `n` objek. Tabel berikut adalah rujukan nilai RI untuk setiap `n` objek $2 \le  n  \le  10$. 
 
-| $n$   | $1$   | $2$   | $3$   | $4$   | $5$   | $6$   | $7$   | $8$   | $9$   | $10$  |
-|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
-| $RI$  | `0.00`| `0.00`| `0.58`| `0.90`| `1.12`| `1.24`| `1.32`| `1.41`| `1.45`| `1.49`|
+
+|  $n$   | $1$   | $2$   | $3$   | $4$   | $5$   | $6$   | $7$   | $8$   | $9$   | $10$  |
+| -------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
+|  $RI$  | `0.00`| `0.00`| `0.58`| `0.90`| `1.12`| `1.24`| `1.32`| `1.41`| `1.45`| `1.49`|
 
 CR (*Consistency Ratio*) adalah hasil perbandingan antara CI dengan RI. Jika $CR \le 0.10$ (10%), maka jawaban pengguna konsisten sehingga solusi yang dihasilkan optimal.
 

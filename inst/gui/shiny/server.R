@@ -88,11 +88,11 @@ function(input, output, session) {
 
       if(nilai != 0 && !is.null(nilai) && is.numeric(nilai)) {
         if(nilai < 0 ){
-          df[sets[i, 1], sets[i, 2]] <- 1 / abs(nilai)
-          df[sets[i, 2], sets[i, 1]] <- abs(nilai)
+          df[sets[i, 1], sets[i, 2]] <- abs(nilai)
+          df[sets[i, 2], sets[i, 1]] <- 1 / abs(nilai)
         } else {
-          df[sets[i, 1], sets[i, 2]] <- nilai
-          df[sets[i, 2], sets[i, 1]] <- 1 / nilai
+          df[sets[i, 1], sets[i, 2]] <- 1 / nilai
+          df[sets[i, 2], sets[i, 1]] <- nilai
         }
       }
     }
@@ -168,11 +168,11 @@ function(input, output, session) {
 
         if(nilai != 0 && !is.null(nilai) && is.numeric(nilai)) {
           if(nilai < 0 ){
-            df[sets[j, 1], sets[j, 2]] <- 1 / abs(nilai)
-            df[sets[j, 2], sets[j, 1]] <- abs(nilai)
+            df[sets[j, 1], sets[j, 2]] <- abs(nilai)
+            df[sets[j, 2], sets[j, 1]] <- 1 / abs(nilai)
           } else {
-            df[sets[j, 1], sets[j, 2]] <- nilai
-            df[sets[j, 2], sets[j, 1]] <- 1 / nilai
+            df[sets[j, 1], sets[j, 2]] <- 1 / nilai
+            df[sets[j, 2], sets[j, 1]] <- nilai
           }
         }
       }

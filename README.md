@@ -1,0 +1,89 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# ahp
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+`ahp` adalah paket R untuk melakukan simulasi **Analytic Hierarchy
+Process (AHP)**, sebuah metode pengambilan keputusan multi-kriteria yang
+dikembangkan oleh Thomas L. Saaty. Paket ini menyediakan fungsi
+pendukung perhitungan AHP (perbandingan berpasangan, bobot prioritas,
+dan uji konsistensi) serta aplikasi [Shiny](https://shiny.posit.co/)
+interaktif berbahasa Indonesia untuk membangun model AHP tanpa perlu
+menulis kode.
+
+## Fitur
+
+- `generate_combinations()` — membangkitkan seluruh kombinasi
+  perbandingan berpasangan (pairwise comparison) untuk `n`
+  kriteria/alternatif.
+- `ahp_app()` — menjalankan aplikasi Shiny interaktif dengan empat tab:
+  - **Kriteria** — input kriteria dan matriks perbandingan berpasangan
+    antar kriteria.
+  - **Alternatif** — input alternatif dan matriks perbandingan
+    berpasangan antar alternatif untuk setiap kriteria.
+  - **Analisis** — ringkasan bobot prioritas serta Indeks
+    Konsistensi (CI) dan Rasio Konsistensi (CR).
+  - **Tentang** — informasi mengenai aplikasi.
+- Perhitungan bobot prioritas menggunakan pendekatan rata-rata geometris
+  (*geometric mean*) sebagai aproksimasi vektor eigen.
+- Pengecekan konsistensi otomatis menggunakan tabel *Random Index* (RI)
+  untuk `n = 2` sampai `15`, dan formula pendekatan untuk `n > 15`.
+
+## Instalasi
+
+Anda dapat menginstal versi pengembangan `ahp` dari
+[GitHub](https://github.com/) dengan:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("alfanugraha/ahp")
+```
+
+## Contoh Penggunaan
+
+### Membangkitkan kombinasi perbandingan berpasangan
+
+Untuk 3 kriteria, terdapat 3 kombinasi perbandingan berpasangan yang
+perlu diisi:
+
+``` r
+library(ahp)
+
+generate_combinations(3)
+#>      [,1] [,2]
+#> [1,]    1    2
+#> [2,]    1    3
+#> [3,]    2    3
+```
+
+### Menjalankan aplikasi Shiny
+
+Cara termudah untuk menggunakan AHP adalah melalui aplikasi Shiny bawaan
+paket ini:
+
+``` r
+library(ahp)
+
+ahp_app()
+```
+
+Aplikasi akan terbuka di browser dan memandu Anda melalui tahapan
+berikut:
+
+1.  Masukkan daftar kriteria (dipisahkan koma) pada tab **Kriteria**,
+    lalu isi nilai perbandingan berpasangan menggunakan slider.
+2.  Masukkan daftar alternatif pada tab **Alternatif**, lalu isi matriks
+    perbandingan berpasangan untuk setiap kriteria.
+3.  Lihat bobot prioritas akhir beserta nilai CI/CR pada tab
+    **Analisis** untuk memastikan konsistensi penilaian (CR ≤ 0.10
+    dianggap konsisten).
+
+## Referensi
+
+- Saaty, T. L. (1980). *The Analytic Hierarchy Process*. McGraw-Hill.
+- Penjelasan rumus Indeks Konsistensi tersedia di
+  [`inst/gui/shiny/ahp_formula.Rmd`](inst/gui/shiny/ahp_formula.Rmd).
