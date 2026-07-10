@@ -3,6 +3,7 @@ library(bslib)
 library(DT)
 library(htmltools)
 library(gtools)
+library(markdown)
 
 table_pembanding_df <- data.frame(
   Sintaks = c("sangat diutamakan", "lebih diutamakan menuju sangat diutamakan", "lebih diutamakan",
